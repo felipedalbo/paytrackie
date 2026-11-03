@@ -60,11 +60,14 @@ export function calculateDayPay(startTime, endTime, breakMinutes, lunchMinutes, 
     totalMinutes // passa total bruto para calcular o overlap correto
   );
 
-  // Distribuir o almoço não pago proporcionalmente entre as horas do turno.
-  // Sem o horário do almoço, isso mantém o cálculo consistente entre os períodos.
-  const nightWorkedMinutes = totalMinutes > 0
-    ? Math.min(nightMinutes * (workedMinutes / totalMinutes), workedMinutes)
-    : 0;
+  // Deduzir do período noturno a parcela proporcional do almoço não pago.
+  // Ex.: 4h noturnas em um turno de 8h com 30 min de almoço = 3,75h.
+  const nightShareOfShift = totalMinutes > 0 ? nightMinutes / totalMinutes : 0;
+  const unpaidLunchDuringNight = Math.min(lunchMinutes, totalMinutes) * nightShareOfShift;
+  const nightWorkedMinutes = Math.min(
+    Math.max(0, nightMinutes - unpaidLunchDuringNight),
+    workedMinutes
+  );
   const nightPremiumHours = nightWorkedMinutes / 60;
   const regularHours = Math.max(0, totalHours - nightPremiumHours);
 
